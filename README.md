@@ -163,6 +163,51 @@ docker push harbor.local/library/nginx:1.0
 
 ```
 
+
+
+## 💥 Se ocorrer o erro:
+
+```
+Error: The protocolis https but attribute ssl_certisnotset
+Error happenedin config validation...
+
+```
+
+## ✅ SOLUÇÃO (LAB / HTTP)
+
+Se você quer rodar **em HTTP** (lab/local), precisa **desabilitar completamente o HTTPS** no `harbor.yml`.
+
+### 1️⃣ Edite o `harbor.yml`
+
+```bash
+vim harbor.yml
+```
+
+**2️⃣ Procure este bloco (HTTPS)**
+
+```yaml
+https:
+  port: 443
+  certificate: /your/certificate/path
+  private_key: /your/private/key/path
+```
+
+**3️⃣ COMENTE ou REMOVA esse bloco inteiro**
+
+```yaml
+# https:
+#   port: 443
+#   certificate: /your/certificate/path
+#   private_key: /your/private/key/path
+```
+
+4️⃣ Salve e rode novamente
+
+```yaml
+docker compose down 
+./install.sh
+```
+
 ⚠️ Faça backup disso em produção.
 
 ---
