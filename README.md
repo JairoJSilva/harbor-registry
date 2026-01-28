@@ -211,3 +211,98 @@ docker compose down
 ⚠️ Faça backup disso em produção.
 
 ---
+
+
+
+
+
+
+
+## Realizar instalação em outros ambientes.
+
+**✅ O que PODE ser reaproveitado sem problema**
+
+**Copiar** para outro servidor:
+
+**1️⃣ Diretório do Harbor (config + compose).**
+
+```bash
+/opt/harbor/harbor
+```
+
+### Contem:
+
+- `docker-compose.yml`
+- `.env`
+- `harbor.yml`
+- `install.sh`
+
+**✔️ Reutilizável, desde que:**
+
+- hostname seja válido no novo local
+- portas não estejam ocupadas
+
+**2️⃣ Diretório de dados (SE quiser preservar imagens)**
+
+```bash
+/data/harbor
+```
+
+### Contém:
+
+- registry (imagens)
+- banco
+- redis
+- jobs
+- logs
+
+✔️ **Essencial se quiser manter repositórios, usuários e configs**
+
+## ❌ O que NÃO deve simplesmente copiar (ou precisa cuidado)
+
+### 🚫 Certificados HTTPS
+
+Se tiver HTTPS:
+
+- certificados costumam ter **paths absolutos**
+- hostname diferente quebra o cert
+
+👉 Melhor **regerar**.
+
+---
+
+### 🚫 IP fixo / DNS diferente
+
+Se mudar:
+
+- `hostname:` precisa bater com DNS
+- senão o login e push falham
+
+---
+
+## 🔥 FORMAS CORRETAS DE MIGRAR
+
+### 🟢 Cenário 1 — LAB / DEV (rápido)
+
+> “Quero subir igual em outro host, não me importo com dados”
+> 
+1. Copia só:
+
+```bash
+/opt/harbor/harbor
+```
+
+1. Ajusta:
+
+```yaml
+hostname:
+http.port:
+```
+
+1. Roda:
+
+```bash
+./install.sh
+```
+
+🚀 Pronto.
