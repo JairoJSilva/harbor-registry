@@ -1,40 +1,177 @@
-📋 Pré-requisitosDocker instalado e rodando.Docker Compose instalado.Acesso root ou sudo.
-🚀 Passo a Passo de Instalação1.
-Preparar o diretório e baixar o HarborCrie a pasta de instalação e faça o download da versão offline estável (v2.9.4).Bash# Criar diretório
+## Pré-requisitos
+
+No host:
+
+```bash
+docker --version
+docker compose version
+
+```
+
+Recomendado:
+
+- Docker >= 20.x
+- Docker Compose v2
+- Pelo menos **4GB de RAM**
+- Porta **80 e/ou 443 livres**
+
+---
+
+## 1️⃣ Baixar o Harbor
+
+```bash
 mkdir -p /opt/harbor
 cd /opt/harbor
 
-# Download do instalador offline
+```
+
+Baixe a versão mais recente (exemplo):
+
+```bash
 wget https://github.com/goharbor/harbor/releases/download/v2.9.4/harbor-offline-installer-v2.9.4.tgz
 
-# Extrair arquivos
+```
+
+Extraia:
+
+```bash
 tar -xvf harbor-offline-installer-v2.9.4.tgz
 cd harbor
-2. Configuração do harbor.ymlCopie o template de configuração e edite os parâmetros básicos.Bashcp harbor.yml.tmpl harbor.yml
+
+```
+
+---
+
+## 2️⃣ Configurar o arquivo `harbor.yml`
+
+Copie o template:
+
+```bash
+cp harbor.yml.tmpl harbor.yml
+
+```
+
+Edite:
+
+```bash
 vim harbor.yml
-Configurações essenciais para Lab (HTTP):YAMLhostname: harbor.local
+
+```
+
+### Configuração mínima (HTTP – LAB)
+
+```yaml
+hostname:harbor.local
 
 http:
-  port: 80
+port:80
 
-harbor_admin_password: Harbor12345
+harbor_admin_password:Harbor12345
 
 database:
-  password: root123
-  max_idle_conns: 50
-  max_open_conns: 100
+password:root123
+max_idle_conns:50
+max_open_conns:100
 
-data_volume: /data/harbor
+data_volume:/data/harbor
 
 trivy:
-  enabled: true
-[!NOTE]Se não possuir um servidor DNS, aponte o IP do servidor no seu arquivo /etc/hosts:127.0.0.1  harbor.local3. Executar o Script de InstalaçãoO script irá validar o ambiente e gerar o arquivo docker-compose.yml.Bash./install.sh
-⚙️ Gerenciamento do ServiçoO Harbor utiliza Docker Compose para orquestrar seus componentes. Use os comandos abaixo dentro de /opt/harbor/harbor:ComandoDescriçãodocker compose psVerifica o status dos containers.docker compose downDesliga todos os serviços do Harbor.docker compose up -dSobe o Harbor em background.🔐 Acesso e Primeiros PassosInterface WebURL: http://harbor.localUsuário: adminSenha: Harbor12345Teste de Push (Docker CLI)Para enviar imagens para o Harbor via terminal:Bash# Efetuar o login
+enabled:true
+
+```
+
+💡 Se não tiver DNS, adicione no `/etc/hosts`:
+
+```
+IP_DO_SERVIDOR harbor.local
+
+```
+
+---
+
+## 3️⃣ Instalar e gerar o Docker Compose
+
+Rode o script de instalação:
+
+```bash
+./install.sh
+
+```
+
+Se tudo estiver certo, você verá algo como:
+
+```
+✔----Harbor has been installed and started successfully.----
+
+```
+
+📁 Isso vai gerar:
+
+- `docker-compose.yml`
+- `.env`
+- Certificados (se HTTPS)
+
+---
+
+## 4️⃣ Subir / Gerenciar o Harbor
+
+O Harbor já sobe automaticamente, mas depois você pode controlar com:
+
+```bash
+docker compose ps
+docker compose down
+docker compose up -d
+
+```
+
+---
+
+## 5️⃣ Acessar o Harbor
+
+🌐 No navegador:
+
+```
+http://harbor.local
+
+```
+
+🔐 Login:
+
+- **Usuário:** `admin`
+- **Senha:** `Harbor12345`
+
+---
+
+## 6️⃣ Teste com Docker CLI
+
+### Login no registry
+
+```bash
 docker login harbor.local
 
-# Taggear uma imagem local
-docker tag nginx:latest harbor.local/library/nginx:1.0
+```
 
-# Subir a imagem para o registry
+### Subir uma imagem
+
+```bash
+docker tag nginx:latest harbor.local/library/nginx:1.0
 docker push harbor.local/library/nginx:1.0
-📂 Persistência de DadosOs dados do Harbor ficam armazenados no host em:/data/harbor/database: Banco de dados PostgreSQL./registry: Camadas das imagens Docker./job_logs: Logs de execução do sistema.⚠️ Dica de SRE: Em ambientes produtivos, este diretório deve ser incluído na sua política de backup.🛡️ Próximos Passos recomendados:[ ] Configuração de HTTPS com Let's Encrypt ou CA interna.[ ] Integração com LDAP/AD para gestão de usuários.[ ] Configuração de políticas de retenção de imagens.
+
+```
+
+---
+
+## 7️⃣ Estrutura de dados no host
+
+```bash
+/data/harbor
+├── database
+├── registry
+├── job_logs
+├── redis
+
+```
+
+⚠️ Faça backup disso em produção.
+
+---
