@@ -1,26 +1,40 @@
-⚓ Harbor Registry SetupEste repositório contém o guia passo a passo e as configurações necessárias para provisionar o Harbor, um registro de artefatos open-source que armazena, assina e varre conteúdos em busca de vulnerabilidades.[!IMPORTANT]Esta configuração inicial foi projetada para ambientes de Laboratório (HTTP). Para ambientes de produção, recomenda-se fortemente o uso de HTTPS/TLS.🚀 Guia de Instalação1. Preparação do AmbienteCrie o diretório de trabalho e realize o download do instalador offline (versão v2.9.4):Bashmkdir -p /opt/harbor
+📋 Pré-requisitosDocker instalado e rodando.Docker Compose instalado.Acesso root ou sudo.
+🚀 Passo a Passo de Instalação1.
+Preparar o diretório e baixar o HarborCrie a pasta de instalação e faça o download da versão offline estável (v2.9.4).Bash# Criar diretório
+mkdir -p /opt/harbor
 cd /opt/harbor
 
-# Download do instalador
+# Download do instalador offline
 wget https://github.com/goharbor/harbor/releases/download/v2.9.4/harbor-offline-installer-v2.9.4.tgz
 
-# Extração dos arquivos
+# Extrair arquivos
 tar -xvf harbor-offline-installer-v2.9.4.tgz
 cd harbor
-2. Configuração do harbor.ymlO arquivo de configuração define o comportamento do registro. Copie o template e edite os campos principais:Bashcp harbor.yml.tmpl harbor.yml
+2. Configuração do harbor.ymlCopie o template de configuração e edite os parâmetros básicos.Bashcp harbor.yml.tmpl harbor.yml
 vim harbor.yml
-Configuração Mínima Recomendada:hostname: harbor.localhttp.port: 80harbor_admin_password: Harbor12345trivy.enabled: true (Para scan de vulnerabilidades)[!TIP]Caso não possua DNS configurado, adicione o mapeamento no seu arquivo hosts local:echo "IP_DO_SERVIDOR harbor.local" >> /etc/hosts3. Executando o InstaladorInicie o script de instalação automatizada:Bash./install.sh
-Após o término, o Harbor estará rodando via Docker Compose. Você verá a mensagem:✔ ----Harbor has been installed and started successfully.----🛠 Gerenciamento do ServiçoO gerenciamento do ciclo de vida da aplicação é feito via Docker Compose dentro do diretório /opt/harbor/harbor:AçãoComandoVerificar statusdocker compose psParar o Harbordocker compose downIniciar o Harbordocker compose up -d🌐 Acesso e Teste de ConexãoAcesso via Web UIURL: http://harbor.localUsuário: adminSenha: Harbor12345Teste via Docker CLIPara enviar imagens para o seu novo registro, siga o fluxo abaixo:Bash# 1. Login no Registry
+Configurações essenciais para Lab (HTTP):YAMLhostname: harbor.local
+
+http:
+  port: 80
+
+harbor_admin_password: Harbor12345
+
+database:
+  password: root123
+  max_idle_conns: 50
+  max_open_conns: 100
+
+data_volume: /data/harbor
+
+trivy:
+  enabled: true
+[!NOTE]Se não possuir um servidor DNS, aponte o IP do servidor no seu arquivo /etc/hosts:127.0.0.1  harbor.local3. Executar o Script de InstalaçãoO script irá validar o ambiente e gerar o arquivo docker-compose.yml.Bash./install.sh
+⚙️ Gerenciamento do ServiçoO Harbor utiliza Docker Compose para orquestrar seus componentes. Use os comandos abaixo dentro de /opt/harbor/harbor:ComandoDescriçãodocker compose psVerifica o status dos containers.docker compose downDesliga todos os serviços do Harbor.docker compose up -dSobe o Harbor em background.🔐 Acesso e Primeiros PassosInterface WebURL: http://harbor.localUsuário: adminSenha: Harbor12345Teste de Push (Docker CLI)Para enviar imagens para o Harbor via terminal:Bash# Efetuar o login
 docker login harbor.local
 
-# 2. Taggear uma imagem existente
+# Taggear uma imagem local
 docker tag nginx:latest harbor.local/library/nginx:1.0
 
-# 3. Enviar para o Harbor
+# Subir a imagem para o registry
 docker push harbor.local/library/nginx:1.0
-📂 Estrutura de Persistência no HostOs dados do Harbor são persistidos em /data/harbor. É essencial incluir este diretório em sua rotina de backup:Plaintext/data/harbor
-├── database   # Dados do PostgreSQL
-├── registry   # Imagens Docker e Artefatos
-├── job_logs   # Logs de replicação e scans
-└── redis      # Dados de cache
-🔧 Próximos Passos (Hardening & Escalonamento)Para evoluir este setup para um nível corporativo, considere:[ ] Implementação de HTTPS com certificados válidos.[ ] Integração com LDAP/Active Directory.[ ] Configuração de Replicação entre instâncias para HA.[ ] Integração como Registry padrão em clusters Kubernetes.Mantenedor: [Seu Nome/GitHub]Status: 🟢 Funcional (LAB)
+📂 Persistência de DadosOs dados do Harbor ficam armazenados no host em:/data/harbor/database: Banco de dados PostgreSQL./registry: Camadas das imagens Docker./job_logs: Logs de execução do sistema.⚠️ Dica de SRE: Em ambientes produtivos, este diretório deve ser incluído na sua política de backup.🛡️ Próximos Passos recomendados:[ ] Configuração de HTTPS com Let's Encrypt ou CA interna.[ ] Integração com LDAP/AD para gestão de usuários.[ ] Configuração de políticas de retenção de imagens.
