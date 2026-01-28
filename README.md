@@ -61,23 +61,14 @@ vim harbor.yml
 ### Configuração mínima (HTTP – LAB)
 
 ```yaml
-hostname:harbor.local
+hostname: harbor.local
 
 http:
-port:80
+  port: 80
 
-harbor_admin_password:Harbor12345
+harbor_admin_password: Harbor12345
 
-database:
-password:root123
-max_idle_conns:50
-max_open_conns:100
-
-data_volume:/data/harbor
-
-trivy:
-enabled:true
-
+data_volume: /data/harbor
 ```
 
 💡 Se não tiver DNS, adicione no `/etc/hosts`:
